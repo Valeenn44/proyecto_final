@@ -3,7 +3,7 @@ import os
 import time
 import random
 pygame.font.init()
-
+""""""
 
 ALTO, ANCHO = 690, 690
 PANTALLA = pygame.display.set_mode((ALTO, ANCHO))
