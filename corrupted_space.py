@@ -3,7 +3,6 @@ import os
 import time
 import random
 pygame.font.init()
-""""""
 
 ALTO, ANCHO = 690, 690
 PANTALLA = pygame.display.set_mode((ALTO, ANCHO))
@@ -23,10 +22,19 @@ YELLOW_SPACE_SHIP = pygame.image.load(os.path.join("ASSETS_DIR", "nave_principal
 RED_LASER = pygame.image.load(os.path.join("ASSETS_DIR","pixel_laser_red.png"))
 GREEN_LASER = pygame.image.load(os.path.join("ASSETS_DIR","pixel_laser_green.png"))
 BLUE_LASER = pygame.image.load(os.path.join("ASSETS_DIR","pixel_laser_blue.png"))
-YELLOW_LASER = pygame.image.load(os.path.join("ASSETS_DIR","pixel_laser_yellow.png"))
+YELLOW_LASER = pygame.image.load(os.path.join("ASSETS_DIR","disparo.png"))
+
+#Cargamos potenciadores
+POT_DOUBLE_SPEED = pygame.image.load(os.path.join("ASSETS_DIR","pot_double_speed.png"))
+POT_EXPLODE_SHIP = pygame.image.load(os.path.join("ASSETS_DIR","pot_explode_ship.png"))
+POT_STAR = pygame.image.load(os.path.join("ASSETS_DIR","pot_star.png"))
+POT_EXTRA_LIF = pygame.image.load(os.path.join("ASSETS_DIR","pot_extra_lif.png"))
 
 # Background
 BG = pygame.transform.scale(pygame.image.load(os.path.join("ASSETS_DIR","FONDO_ESPACIO1.gif")), (ALTO, ANCHO))
+
+
+potenciadores = []
 
 
 class Laser:
@@ -90,7 +98,7 @@ class Ship:
         
     def shoot(self):
         if self.cool_down_counter == 0:
-            laser = Laser(self.x, self.y, self.laser_img)
+            laser = Laser(self.x + 33, self.y, self.laser_img)
             self.lasers.append(laser)
             self.cool_down_counter = 1
     
@@ -101,6 +109,16 @@ class Ship:
     def get_height(self):
         return self.ship_img.get_height()
 
+class Aniquilidaro():
+
+    def __init__(self, x, y,win):
+        win.blit(POT_EXPLODE_SHIP,(x,y))
+
+    def Usar(self,jugador):
+        jugador.health = 0;
+        
+
+
 
 class Jugador(Ship):
     def __init__(self, x, y , health=100):
@@ -110,7 +128,7 @@ class Jugador(Ship):
         self.mask = pygame.mask.from_surface(self.ship_img)
         self.max_health = health
         
-    def move_lasers(self, vel, objs):
+    def move_lasers(self, vel, objs,win):
         self.cooldown()
         for laser in self.lasers:
             laser.move(vel)
@@ -122,6 +140,15 @@ class Jugador(Ship):
                         objs.remove(obj)
                         if laser in self.lasers:
                             self.lasers.remove(laser)
+                            
+                            pote = Aniquilidaro(obj.x,obj.y,win)
+
+
+                            # Agregar probabilidad de que algo suceda
+                            # probabilidad = random.random()
+
+                            # if probabilidad > 0.75:
+                            #     # Hacer algo aquí
                         
     def healthbar(self, window):
         pygame.draw.rect(window, (255,0,0), (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width(), 10))
@@ -150,7 +177,7 @@ class Enemy(Ship):
         
     def shoot(self):
         if self.cool_down_counter == 0:
-            laser = Laser(self.x - 17, self.y, self.laser_img)
+            laser = Laser(self.x + 10, self.y + 60, self.laser_img)
             self.lasers.append(laser)
             self.cool_down_counter = 1
 
@@ -251,8 +278,10 @@ def main():
                 vidas -= 1
                 enemigos.remove(enemigo)
             
-                
-        jugador.move_lasers(-laser_vel, enemigos)
+        
+
+
+        jugador.move_lasers(-laser_vel, enemigos,PANTALLA)
         
         
 def main_menu():
