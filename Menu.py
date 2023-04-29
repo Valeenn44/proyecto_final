@@ -21,7 +21,7 @@ titulo = fuente_titulo.render("Mi Juego", True, BLANCO)
 opcion1 = fuente_menu.render("Jugar", True, BLANCO)
 opcion2 = fuente_menu.render("Opciones", True, BLANCO)
 opcion3 = fuente_menu.render("Salir", True, BLANCO)
-
+#
 # Variables de control
 opcion_seleccionada = 0
 opciones = ["Jugar", "Opciones", "Salir"]
