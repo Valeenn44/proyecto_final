@@ -3,6 +3,7 @@ import os
 import time
 import random
 pygame.font.init()
+pygame.mixer.init()
 
 ALTO, ANCHO = 690, 690
 PANTALLA = pygame.display.set_mode((ALTO, ANCHO))
@@ -30,11 +31,12 @@ POT_EXPLODE_SHIP = pygame.image.load(os.path.join("ASSETS_DIR","pot_explode_ship
 POT_STAR = pygame.image.load(os.path.join("ASSETS_DIR","pot_star.png"))
 POT_EXTRA_LIF = pygame.image.load(os.path.join("ASSETS_DIR","pot_extra_lif.png"))
 
+# Sounds
+laser_sound = pygame.mixer.Sound(os.path.join("ASSETS_DIR","laser_sound.mp3"))
+ST_sound = pygame.mixer.Sound(os.path.join("ASSETS_DIR","music.ogg"))
+
 # Background
 BG = pygame.transform.scale(pygame.image.load(os.path.join("ASSETS_DIR","FONDO_ESPACIO1.gif")), (ALTO, ANCHO))
-
-
-potenciadores = []
 
 
 class Laser:
@@ -109,15 +111,24 @@ class Ship:
     def get_height(self):
         return self.ship_img.get_height()
 
-class Aniquilidaro():
+class potenciador(): 
+    type_pote = { "suicidio": (POT_EXPLODE_SHIP),
+                  "star": (POT_STAR),
+                  "speed": (POT_DOUBLE_SPEED),
+                  "life": (POT_EXTRA_LIF)
+    }
 
-    def __init__(self, x, y,win):
-        win.blit(POT_EXPLODE_SHIP,(x,y))
+    def __init__(self, x, y, effect):
+        self.x = x
+        self.y = y
+        self.effect_img = self.type_pote[effect]
+        self.mask = pygame.mask.from_surface(self.effect_img)
 
-    def Usar(self,jugador):
-        jugador.health = 0;
+    def suicidio(self, window):
+        window.blit(self.effect_img, (self.x, self.y))
         
-
+    def collision(self, objeto):
+        return collide(objeto, self)
 
 
 class Jugador(Ship):
@@ -141,14 +152,8 @@ class Jugador(Ship):
                         if laser in self.lasers:
                             self.lasers.remove(laser)
                             
-                            pote = Aniquilidaro(obj.x,obj.y,win)
+                            #pote = Suicidio(obj.x,obj.y,win)
 
-
-                            # Agregar probabilidad de que algo suceda
-                            # probabilidad = random.random()
-
-                            # if probabilidad > 0.75:
-                            #     # Hacer algo aquí
                         
     def healthbar(self, window):
         pygame.draw.rect(window, (255,0,0), (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width(), 10))
@@ -199,8 +204,10 @@ def main():
     
     jugador = Jugador(300, 620)
     
+    potenciadores = []
+
     enemigos = []
-    wave_length = 5
+    n_enemigos = 5
     enemy_vel = 2
     
     clock = pygame.time.Clock()
@@ -226,6 +233,7 @@ def main():
         pygame.display.update()
     
     while run:
+        ST_sound.play()
         clock.tick(FPS)
         redraw_window()
         
@@ -241,8 +249,8 @@ def main():
         
         if len(enemigos) == 0:
             nivel += 1
-            wave_length += 5
-            for i in range(wave_length):
+            n_enemigos += 5
+            for i in range(n_enemigos):
                 enemigo = Enemy(random.randrange(50, ALTO - 100), random.randrange(-1500, -100), random.choice(["red", "blue", "green"]))
                 enemigos.append(enemigo)
 
@@ -261,8 +269,7 @@ def main():
             jugador.x += velocidad_jugador
         if keys[pygame.K_s] and jugador.y + velocidad_jugador + jugador.get_height() + 19 < ANCHO: # down
             jugador.y += velocidad_jugador
-        
-            
+
         for enemigo in enemigos[:]: # looping through a copy of list of enemies
             enemigo.move(enemy_vel)
             enemigo.move_lasers(laser_vel, jugador)
@@ -278,9 +285,6 @@ def main():
                 vidas -= 1
                 enemigos.remove(enemigo)
             
-        
-
-
         jugador.move_lasers(-laser_vel, enemigos,PANTALLA)
         
         
