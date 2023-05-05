@@ -32,7 +32,7 @@ POT_STAR = pygame.image.load(os.path.join("ASSETS_DIR","pot_star.png"))
 POT_EXTRA_LIF = pygame.image.load(os.path.join("ASSETS_DIR","pot_extra_lif.png"))
 
 # Sounds
-laser_sound = pygame.mixer.Sound(os.path.join("ASSETS_DIR","laser_sound.mp3"))
+laser_sound = pygame.mixer.Sound(os.path.join("ASSETS_DIR","laser1_sound.mp3"))
 ST_sound = pygame.mixer.Sound(os.path.join("ASSETS_DIR","music.ogg"))
 
 # Background
@@ -100,7 +100,7 @@ class Ship:
         
     def shoot(self):
         if self.cool_down_counter == 0:
-            laser = Laser(self.x + 33, self.y, self.laser_img)
+            laser = Laser(self.x + 33, self.y + 5, self.laser_img)
             self.lasers.append(laser)
             self.cool_down_counter = 1
     
@@ -191,7 +191,7 @@ def main():
     run = True
     FPS = 60
     nivel = 0
-    vidas = 5
+    vidas = 1
     
     lost = False
     lost_count = 0
@@ -238,6 +238,7 @@ def main():
         redraw_window()
         
         if vidas <= 0 or jugador.health <= 0:
+            ST_sound.stop()
             lost = True
             lost_count += 1
         
@@ -295,6 +296,7 @@ def main_menu():
         PANTALLA.blit(BG, (0,0))
         title_label = title_font.render("Click para empezar", 1, (255,255,255))
         PANTALLA.blit(title_label, (ALTO/2 - title_label.get_width()/2, 350))
+        ST_sound.stop()
 
         pygame.display.update()
         for event in pygame.event.get():
