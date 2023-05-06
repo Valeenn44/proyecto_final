@@ -20,6 +20,7 @@ GREEN_SPACE_SHIP = pygame.image.load(os.path.join("ASSETS_DIR", "enemigo_verde.p
 
 # Jugador ship 
 YELLOW_SPACE_SHIP = pygame.image.load(os.path.join("ASSETS_DIR", "nave_principal.png"))
+EXPLOCIÓN = pygame.image.load(os.path.join("ASSETS_DIR", "explocion_1.png"))
 
 # Lasers 
 RED_LASER = pygame.image.load(os.path.join("ASSETS_DIR","pixel_laser_red.png"))
@@ -36,6 +37,7 @@ POT_EXTRA_LIF = pygame.image.load(os.path.join("ASSETS_DIR","pot_extra_life.png"
 # Sounds
 ST_sound = pygame.mixer.Sound(os.path.join("ASSETS_DIR","musica_st.wav"))
 menú_sound = pygame.mixer.Sound(os.path.join("ASSETS_DIR","musica_menú.wav"))
+lose_sound = pygame.mixer.Sound(os.path.join("ASSETS_DIR","audio_lose_2.wav"))
 
 # Background
 BG = pygame.transform.scale(pygame.image.load(os.path.join("ASSETS_DIR","FONDO_ESPACIO1.gif")), (ALTO, ANCHO))
@@ -64,13 +66,13 @@ class Laser:
 def collide(obj1, obj2):
     offset_x = obj2.x - obj1.x
     offset_y = obj2.y - obj1.y
-    return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None 
+    return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
 
 
 class Ship:
     COOLDOWN = 10
     
-    def __init__(self, x, y, health=100):
+    def __init__(self, x, y, health=1):
         self.x = x
         self.y = y
         self.health = health
@@ -113,26 +115,6 @@ class Ship:
     def get_height(self):
         return self.ship_img.get_height()
 
-class potenciador(): 
-    type_pote = { "suicidio": (POT_EXPLODE_SHIP),
-                  "star": (POT_STAR),
-                  "speed": (POT_DOUBLE_SPEED),
-                  "life": (POT_EXTRA_LIF)
-    }
-
-    def __init__(self, x, y, effect):
-        self.x = x
-        self.y = y
-        self.effect_img = self.type_pote[effect]
-        self.mask = pygame.mask.from_surface(self.effect_img)
-
-    def suicidio(self, window):
-        window.blit(self.effect_img, (self.x, self.y))
-        
-    def collision(self, objeto):
-        return collide(objeto, self)
-
-
 class Jugador(Ship):
     def __init__(self, x, y , health=100):
         super().__init__(x, y , health)
@@ -141,7 +123,7 @@ class Jugador(Ship):
         self.mask = pygame.mask.from_surface(self.ship_img)
         self.max_health = health
         
-    def move_lasers(self, vel, objs,win):
+    def move_lasers(self, vel, objs, win):
         self.cooldown()
         for laser in self.lasers:
             laser.move(vel)
@@ -153,8 +135,6 @@ class Jugador(Ship):
                         objs.remove(obj)
                         if laser in self.lasers:
                             self.lasers.remove(laser)
-                            
-                            #pote = Suicidio(obj.x,obj.y,win)
 
                         
     def healthbar(self, window):
@@ -196,13 +176,14 @@ def main():
     run = True
     FPS = 60
     nivel = 0
-    vidas = 5
+    vidas = 1
     
     lost = False
     lost_count = 0
     
     main_font = pygame.font.SysFont("comicsans", 50)
     lost_font = pygame.font.SysFont("comicsans", 80)
+    tiempo_font = pygame.font.SysFont ("comicsans", 40)
     
     velocidad_jugador = 5
     laser_vel = 4
@@ -214,7 +195,7 @@ def main():
     enemigos = []
     n_enemigos = 5
     enemy_vel = 2
-    
+
     clock = pygame.time.Clock()
     
     def redraw_window():
@@ -232,8 +213,9 @@ def main():
         jugador.draw(PANTALLA)
         
         if lost:
-            lost_label = lost_font.render("You lost!!!", 1, (255,255,255))
-            PANTALLA.blit(lost_label, (ALTO/2 - lost_label.get_width()/2, 350))
+            lose_sound.play()
+            lost_label = lost_font.render("¡¡¡Perdiste!!!", 1, (255,255,255))
+            PANTALLA.blit(lost_label, (ALTO/2 - lost_label.get_width()/2, 250))
 
         pygame.display.update()
     
@@ -266,13 +248,13 @@ def main():
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE]:
             jugador.shoot()
-        if keys[pygame.K_w] and jugador.y - velocidad_jugador > 0: # up
+        if keys[pygame.K_w] and jugador.y - velocidad_jugador > 0:
             jugador.y -= velocidad_jugador
-        if keys[pygame.K_a] and jugador.x - velocidad_jugador > 0: # left
+        if keys[pygame.K_a] and jugador.x - velocidad_jugador > 0:
             jugador.x -= velocidad_jugador
-        if keys[pygame.K_d] and jugador.x + velocidad_jugador + jugador.get_width() < ALTO: # right
+        if keys[pygame.K_d] and jugador.x + velocidad_jugador + jugador.get_width() < ALTO:
             jugador.x += velocidad_jugador
-        if keys[pygame.K_s] and jugador.y + velocidad_jugador + jugador.get_height() + 19 < ANCHO: # down
+        if keys[pygame.K_s] and jugador.y + velocidad_jugador + jugador.get_height() + 19 < ANCHO:
             jugador.y += velocidad_jugador
         if keys[pygame.K_ESCAPE]:
             main_menu()
@@ -284,7 +266,7 @@ def main():
             
             if random.randrange(0, 2*60) == 1:
                 enemigo.shoot()
-            
+                
             if collide(enemigo, jugador):
                 jugador.health -= 10
                 enemigos.remove(enemigo)
@@ -296,24 +278,7 @@ def main():
         jugador.move_lasers(-laser_vel, enemigos,PANTALLA)
         
         
-def main_menu():
-    keys = pygame.key.get_pressed()
-    #Baja volumen
-    if keys[pygame.K_9] and pygame.mixer.music.get_volume() > 0.0:
-        pygame.mixer.music.set_volume(pygame.mixer.music.get_volume() - 0.01)
-
-    #Sube volumen
-    if keys[pygame.K_0] and pygame.mixer.music.get_volume() < 1.0:
-        pygame.mixer.music.set_volume(pygame.mixer.music.get_volume() + 0.01)
-
-    #Desactivar sonido
-    elif keys[pygame.K_m]:
-        pygame.mixer.music.set_volume(0.0)
-
-    #Reactivar sonido
-    elif keys[pygame.K_COMMA]:
-        pygame.mixer.music.set_volume(1.0)
-    
+def main_menu():    
     # Configurar la pantalla
     screen = pygame.display.set_mode((ALTO, ANCHO))
     pygame.display.set_caption("Proyecto final")
@@ -332,7 +297,7 @@ def main_menu():
     opcion1 = fuente_menu.render("Jugar", True, BLANCO)
     opcion2 = fuente_menu.render("Opciones", True, BLANCO)
     opcion3 = fuente_menu.render("Salir", True, BLANCO)
-    #
+    
     # Variables de control
     opcion_seleccionada = 0
     opciones = ["Jugar", "Opciones", "Salir"]
@@ -342,16 +307,17 @@ def main_menu():
     while run:
         menú_sound.play()
         ST_sound.stop()
+        lose_sound.stop()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_w:
+                if event.key == pygame.K_w or event.key == pygame.K_UP:
                     opcion_seleccionada = (opcion_seleccionada - 1) % len(opciones)
-                elif event.key == pygame.K_s:
+                elif event.key == pygame.K_s or event.key == pygame.K_DOWN:
                     opcion_seleccionada = (opcion_seleccionada + 1) % len(opciones)
-                elif event.key == pygame.K_SPACE:
+                elif event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
                     if opcion_seleccionada == 0:
                         main()
                     elif opcion_seleccionada == 1:
