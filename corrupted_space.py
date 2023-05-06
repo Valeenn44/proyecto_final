@@ -11,36 +11,29 @@ ALTO, ANCHO = 690, 690
 PANTALLA = pygame.display.set_mode((ALTO, ANCHO))
 pygame.display.set_caption("Proyecto Final")
 
-ASSETS_DIR = os.path.join(os.getcwd(), "ASSETS_DIR")
+ARCHIVOS = os.path.join(os.getcwd(), "ARCHIVOS")
 
-# Load images
-RED_SPACE_SHIP = pygame.image.load(os.path.join("ASSETS_DIR", "enemigo_verde_2.png"))
-BLUE_SPACE_SHIP = pygame.image.load(os.path.join("ASSETS_DIR", "enemigo_rosa.png"))
-GREEN_SPACE_SHIP = pygame.image.load(os.path.join("ASSETS_DIR", "enemigo_verde.png"))
+# Enemigos
+RED_SPACE_SHIP = pygame.image.load(os.path.join("ARCHIVOS", "enemigo_verde_2.png"))
+BLUE_SPACE_SHIP = pygame.image.load(os.path.join("ARCHIVOS", "enemigo_rosa.png"))
+GREEN_SPACE_SHIP = pygame.image.load(os.path.join("ARCHIVOS", "enemigo_verde.png"))
 
 # Jugador ship 
-YELLOW_SPACE_SHIP = pygame.image.load(os.path.join("ASSETS_DIR", "nave_principal.png"))
-EXPLOCIÓN = pygame.image.load(os.path.join("ASSETS_DIR", "explocion_1.png"))
+YELLOW_SPACE_SHIP = pygame.image.load(os.path.join("ARCHIVOS", "nave_principal.png"))
 
 # Lasers 
-RED_LASER = pygame.image.load(os.path.join("ASSETS_DIR","pixel_laser_red.png"))
-GREEN_LASER = pygame.image.load(os.path.join("ASSETS_DIR","pixel_laser_green.png"))
-BLUE_LASER = pygame.image.load(os.path.join("ASSETS_DIR","pixel_laser_blue.png"))
-YELLOW_LASER = pygame.image.load(os.path.join("ASSETS_DIR","disparo.png"))
-
-#Cargamos potenciadores
-POT_DOUBLE_SPEED = pygame.image.load(os.path.join("ASSETS_DIR","pot_double_speed.png"))
-POT_EXPLODE_SHIP = pygame.image.load(os.path.join("ASSETS_DIR","pot_explode_ship.png"))
-POT_STAR = pygame.image.load(os.path.join("ASSETS_DIR","pot_star.png"))
-POT_EXTRA_LIF = pygame.image.load(os.path.join("ASSETS_DIR","pot_extra_life.png"))
+RED_LASER = pygame.image.load(os.path.join("ARCHIVOS","pixel_laser_red.png"))
+GREEN_LASER = pygame.image.load(os.path.join("ARCHIVOS","pixel_laser_green.png"))
+BLUE_LASER = pygame.image.load(os.path.join("ARCHIVOS","pixel_laser_blue.png"))
+YELLOW_LASER = pygame.image.load(os.path.join("ARCHIVOS","disparo.png"))
 
 # Sounds
-ST_sound = pygame.mixer.Sound(os.path.join("ASSETS_DIR","musica_st.wav"))
-menú_sound = pygame.mixer.Sound(os.path.join("ASSETS_DIR","musica_menú.wav"))
-lose_sound = pygame.mixer.Sound(os.path.join("ASSETS_DIR","audio_lose_2.wav"))
+ST_sound = pygame.mixer.Sound(os.path.join("ARCHIVOS","musica_st.wav"))
+menú_sound = pygame.mixer.Sound(os.path.join("ARCHIVOS","musica_menú.wav"))
+lose_sound = pygame.mixer.Sound(os.path.join("ARCHIVOS","audio_lose_2.wav"))
 
 # Background
-BG = pygame.transform.scale(pygame.image.load(os.path.join("ASSETS_DIR","FONDO_ESPACIO1.gif")), (ALTO, ANCHO))
+BG = pygame.transform.scale(pygame.image.load(os.path.join("ARCHIVOS","FONDO_ESPACIO1.gif")), (ALTO, ANCHO))
 
 
 class Laser:
@@ -72,7 +65,7 @@ def collide(obj1, obj2):
 class Ship:
     COOLDOWN = 10
     
-    def __init__(self, x, y, health=1):
+    def __init__(self, x, y, health=100):
         self.x = x
         self.y = y
         self.health = health
@@ -85,7 +78,7 @@ class Ship:
         window.blit(self.ship_img, (self.x, self.y))
         for laser in self.lasers:
             laser.draw(window)
-            
+
     def move_lasers(self, vel, obj):
         self.cooldown()
         for laser in self.lasers:
@@ -108,13 +101,12 @@ class Ship:
             self.lasers.append(laser)
             self.cool_down_counter = 1
     
-    
     def get_width(self):
         return self.ship_img.get_width()
     
     def get_height(self):
         return self.ship_img.get_height()
-
+    
 class Jugador(Ship):
     def __init__(self, x, y , health=100):
         super().__init__(x, y , health)
@@ -176,21 +168,18 @@ def main():
     run = True
     FPS = 60
     nivel = 0
-    vidas = 1
+    vidas = 5
     
     lost = False
     lost_count = 0
     
     main_font = pygame.font.SysFont("comicsans", 50)
     lost_font = pygame.font.SysFont("comicsans", 80)
-    tiempo_font = pygame.font.SysFont ("comicsans", 40)
     
     velocidad_jugador = 5
     laser_vel = 4
     
     jugador = Jugador(300, 620)
-    
-    potenciadores = []
 
     enemigos = []
     n_enemigos = 5
@@ -233,13 +222,6 @@ def main():
                 run = False
             else:
                 continue
-        
-        if len(enemigos) == 0:
-            nivel += 1
-            n_enemigos += 5
-            for i in range(n_enemigos):
-                enemigo = Enemy(random.randrange(50, ALTO - 100), random.randrange(-1500, -100), random.choice(["red", "blue", "green"]))
-                enemigos.append(enemigo)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -259,7 +241,13 @@ def main():
         if keys[pygame.K_ESCAPE]:
             main_menu()
             
-
+        if len(enemigos) == 0:
+            nivel += 1
+            n_enemigos += 5
+            for i in range(n_enemigos):
+                enemigo = Enemy(random.randrange(50, ALTO - 100), random.randrange(-1500, -100), random.choice(["red", "blue", "green"]))
+                enemigos.append(enemigo)
+            
         for enemigo in enemigos[:]: # looping through a copy of list of enemies
             enemigo.move(enemy_vel)
             enemigo.move_lasers(laser_vel, jugador)
@@ -292,15 +280,12 @@ def main_menu():
     fuente_titulo = pygame.font.SysFont(None, 48)
     fuente_menu = pygame.font.SysFont(None, 36)
 
-    # Textos
+    # titulo
     titulo = fuente_titulo.render("CORRUPTED SPACE", True, BLANCO)
-    opcion1 = fuente_menu.render("Jugar", True, BLANCO)
-    opcion2 = fuente_menu.render("Opciones", True, BLANCO)
-    opcion3 = fuente_menu.render("Salir", True, BLANCO)
     
     # Variables de control
     opcion_seleccionada = 0
-    opciones = ["Jugar", "Opciones", "Salir"]
+    opciones = ["Jugar", "Salir"]
 
     run = True
     
@@ -321,8 +306,6 @@ def main_menu():
                     if opcion_seleccionada == 0:
                         main()
                     elif opcion_seleccionada == 1:
-                        print("¡Opciones!")
-                    elif opcion_seleccionada == 2:
                         pygame.quit()
                         sys.exit()
 
@@ -343,6 +326,6 @@ def main_menu():
 
         # Actualizar pantalla
         pygame.display.flip()
-
+        
 if __name__ == "__main__":
     main_menu()
